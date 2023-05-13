@@ -48,8 +48,7 @@ public class IMDBStudent20180950
 		Configuration conf = new Configuration();
 		
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		if (otherArgs.length != 2) 
-		{
+		if (otherArgs.length != 2) {
 			System.err.println("Usage: imdb <in> <out>");
 			System.exit(2);
 		}
@@ -62,6 +61,9 @@ public class IMDBStudent20180950
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
+		
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
