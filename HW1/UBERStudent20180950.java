@@ -29,15 +29,14 @@ public class UBERStudent20180950
 			String n_day = null;
 			
 			StringTokenizer itr2 = new StringTokenizer(date, "/");
-			while (itr2.hasMoreTokens()) {
-				int month = Integer.parseInt(itr2.nextToken().trim());
-				int day = Integer.parseInt(itr2.nextToken().trim());
-				int year = Integer.parseInt(itr2.nextToken().trim());
-				LocalDate processedDate = LocalDate.of(year, month, day);
-				DayOfWeek dayOfWeek = processedDate.getDayOfWeek();
-				n_day = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.US);
-				n_day = n_day.toUpperCase();
-			}
+			int month = Integer.parseInt(itr2.nextToken().trim());
+			int day = Integer.parseInt(itr2.nextToken().trim());
+			int year = Integer.parseInt(itr2.nextToken().trim());
+			LocalDate processedDate = LocalDate.of(year, month, day);
+			DayOfWeek dayOfWeek = processedDate.getDayOfWeek();
+			n_day = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.US);
+			n_day = n_day.toUpperCase();
+			
 			region_day.set(region + "," + n_day);
 			trips_vehicles.set(trips + "," + vehicles);
 			context.write(region_day, trips_vehicles);
@@ -47,7 +46,6 @@ public class UBERStudent20180950
 	public static class UBERReducer extends Reducer<Text,Text,Text,Text> {
 		private Text result = new Text();
 		
-
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			int sumT = 0;
 			int sumV = 0;
@@ -58,7 +56,7 @@ public class UBERStudent20180950
 				sumT += t;
 				sumV += v;
 			}
-			result.set(t + "," + v);
+			result.set(sumT + "," + sumV);
 			context.write(key, result);
 		}
 	}
