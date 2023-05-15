@@ -12,8 +12,6 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import javafx.scene.text.Text;
-
 public class UBERStudent20180950
 {
 	public static class UBERMapper extends Mapper<Object, Text, Text, Text> {
@@ -21,7 +19,7 @@ public class UBERStudent20180950
 		private Text trips_vehicles = new Text();
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-			StringTokenizer itr = new StringTokenizer(str, ",");
+			StringTokenizer itr = new StringTokenizer(value.toString(), ",");
 			String region = itr.nextToken().trim();
 			String date = itr.nextToken().trim();
 			int vehicles = Integer.parseInt(itr.nextToken().trim());
@@ -36,6 +34,7 @@ public class UBERStudent20180950
 			DayOfWeek dayOfWeek = processedDate.getDayOfWeek();
 			n_day = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.US);
 			n_day = n_day.toUpperCase();
+			if (n_day.equals("THU")) n_day = "THR";
 			
 			region_day.set(region + "," + n_day);
 			trips_vehicles.set(trips + "," + vehicles);
