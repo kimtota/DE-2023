@@ -34,6 +34,7 @@ public class UBERStudent20180950
 			DayOfWeek dayOfWeek = processedDate.getDayOfWeek();
 			n_day = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.US);
 			n_day = n_day.toUpperCase();
+			if (n_day.equals("THU")) n_day = "THR";
 			
 			region_day.set(region + "," + n_day);
 			trips_vehicles.set(trips + "," + vehicles);

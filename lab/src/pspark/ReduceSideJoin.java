@@ -1,4 +1,4 @@
-import java.io.IOException;
+/**import java.io.IOException;
 import java.util.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
@@ -93,4 +93,4 @@ public class ReduceSideJoin
 		FileSystem.get(job.getConfiguration()).delete( new Path(otherArgs[1]), true);
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
-}
+}**/
