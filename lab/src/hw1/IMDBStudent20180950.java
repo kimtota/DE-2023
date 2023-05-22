@@ -13,7 +13,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class IMDBStudent20180950
 {
 
-	public static class WordCountMapper extends Mapper<Object, Text, Text, IntWritable>
+	public static class IMDBMapper extends Mapper<Object, Text, Text, IntWritable>
 	{
 		private final static IntWritable one = new IntWritable(1);
 		private Text word = new Text();
@@ -35,27 +35,10 @@ public class IMDBStudent20180950
 				}
 				cnt++;
 			}
-			/**StringTokenizer itr = new StringTokenizer(value.toString(), "'::'");
-			int cnt = 0;
-			while (itr.hasMoreTokens())
-			{
-				String str = itr.nextToken().trim();
-				cnt++;
-				
-				if(cnt == 3) {
-					StringTokenizer itr2  = new StringTokenizer(str, "|");
-					while (itr2.hasMoreTokens()) {
-						word.set(itr2.nextToken());
-						context.write(word, one);
-					}
-					cnt = 0;
-				}
-			}**/
-			
 		}
 	}
 
-	public static class WordCountReducer extends Reducer<Text,IntWritable,Text,IntWritable> 
+	public static class IMDBReducer extends Reducer<Text,IntWritable,Text,IntWritable>
 	{
 		private IntWritable result = new IntWritable();
 
@@ -77,14 +60,14 @@ public class IMDBStudent20180950
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if (otherArgs.length != 2) 
 		{
-			System.err.println("Usage: wordcount <in> <out>");
+			System.err.println("Usage: IMDB <in> <out>");
 			System.exit(2);
 		}
-		Job job = new Job(conf, "word count");
+		Job job = new Job(conf, "imdb");
 		job.setJarByClass(IMDBStudent20180950.class);
-		job.setMapperClass(WordCountMapper.class);
-		job.setCombinerClass(WordCountReducer.class);
-		job.setReducerClass(WordCountReducer.class);
+		job.setMapperClass(IMDBMapper.class);
+		job.setCombinerClass(IMDBReducer.class);
+		job.setReducerClass(IMDBtReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
