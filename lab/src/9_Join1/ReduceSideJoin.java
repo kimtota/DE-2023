@@ -81,7 +81,7 @@ public class ReduceSideJoin
 			}
 
 			for ( int i = 0 ; i < buffer.size(); i++ ) {
-				Text val = buffer.get(i); 뭔가 추가?
+				Text val = buffer.get(i);
 				
 				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
 				String file_type = itr.nextToken().trim();

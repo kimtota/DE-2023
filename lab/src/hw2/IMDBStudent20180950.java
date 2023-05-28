@@ -12,52 +12,182 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class IMDBStudent20180950
 {
-	public static class IMDBMapper extends Mapper<Object, Text, Text, IntWritable>
-	{
-		private final static IntWritable one = new IntWritable(1);
-		private Text word = new Text();
-		
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
+    /** movies.dat -- fileM
+        ratings.dat -- fileR **/
+
+     public static class IMDBMapper extends Mapper<Object, Text, Text, Text>
+     {
+        boolean fileM = true;
+        private Text _key = new Text();
+        private Text _value = new Text();
+
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
 		{
-			String str = value.toString();
+            String str = value.toString();
 			String[] splitter = str.split("::");
+
+            if( fileM ) {
+                int cnt = 0;
+			    for (int i=0; i < splitter.length; i++) {
+                    if (cnt == 0) {
+                        _key.set(splitter[i]);
+                    }
+                    else if(cnt == 2) {
+                        StringTokenizer itr  = new StringTokenizer(splitter[i], "|");
+                        while (itr.hasMoreTokens()) {
+                            String g = itr.nextToken().trim();
+                            if (g.equals("Fantasy")) {
+                                _value.set("M|" + splitter[i-1]);
+                                context.write( _key, _value);
+                            }
+                        } cnt = 0;
+                    } cnt++;
+                }
+            }
+            else {
+                String tmp_value;
+                int cnt = 0;
+			    for (int i=0; i < splitter.length; i++) {
+                    if (cnt == 0) {
+                        tmp_value = "R|";
+                    }
+                    else if (cnt == 1) {
+                        _key.set(splitter[i]);
+                    }
+                    else if(cnt == 2) {
+                        tmp_value += splitter[i];
+                    }
+                    else if(cnt == 3) {
+                        _value.set(tmp_value);
+                        context.write(_key, _value);
+                        cnt = 0;
+                        tmp_value = "";
+                    }
+                    cnt++;
+                }
+            }
+        }
+     }
+
+	public static class IMDBReducer extends Reducer<Text,Text,Text,DoubleWritable>
+	{
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+			Text reduce_key = new Text();
+			DoubleWritable reduce_result = new DoubleWritable();
+			String title = "";
+            double sum = 0;
+            int cnt = 0;
 			
-			int cnt = 0;
-			for (int i=0; i < splitter.length; i++) {
-				if(cnt == 2) {
-					StringTokenizer itr  = new StringTokenizer(splitter[i], "|");
-					while (itr.hasMoreTokens()) {
-						word.set(itr.nextToken());
-						context.write(word, one);
-					}
-					cnt = 0;
+			for (Text val : values) {
+				StringTokenizer itr = new StringTokenizer(val.toString(), "|");
+				String file_type = itr.nextToken().trim();
+
+				if( file_type.equals("M") ) {
+                    title = itr.nextToken().trim();
 				}
-				cnt++;
+				else {
+                    int rating = Integer.parseInt(itr.nextToken().trim());
+                    sum += rating;
+                    cnt++;
+				}
+            }
+            reduce_key.set(title);
+            reduce_result.set(sum / cnt);
+            context.write(reduce_key, reduce_result);
+		}
+	}
+
+    public static class Data {
+        public String title;
+        public double rate;
+
+        public Data(String _title, double _rate) {
+            this.title = _title;
+            this.rate = _rate;
+        }
+
+        public String getString() {
+            return title + " " + rate;
+        }
+    }
+
+    public static class DataComparator implements Comparator<Data> {
+		public int compare(Data x, Data y) {
+			if ( x.rate > y.rate ) return 1;
+			if ( x.rate < y.rate ) return -1;
+			return 0;
+		}
+	}
+
+	public static void insertData(PriorityQueue q, String title, double rate, int topK) {
+		Data data_head = (Data) q.peek();
+		if ( q.size() < topK || data_head.rate < rate ) {
+			Data data = new Data(title, rate);
+			q.add( data );
+			if( q.size() > topK ) 
+                q.remove();
+		}
+	}
+
+    public static class TopKMapper extends Mapper<Text, DoubleWritable, Text, NullWritable> {
+		private PriorityQueue<Data> queue ;
+        private Comparator<Data> comp = new DataComparator();
+		private int topK;
+		
+		public void map(Object key, Text value, Context context) throws IOException,
+		InterruptedException {
+			StringTokenizer itr = new StringTokenizer(value.toString());
+			String title = itr.nextToken().trim();
+            double rate = Double.parseDouble(itr.nextToken().trim());
+            insertData(queue, title, rate, topK);
+		}
+		
+		protected void setup(Context context) throws IOException, InterruptedException {
+			Configuration conf = context.getConfiguration();
+			topK = conf.getInt("topK", -1);
+			queue = new PriorityQueue<Data>( topK , comp);
+		}
+		
+		protected void cleanup(Context context) throws IOException, InterruptedException {
+			while( queue.size() != 0 ) {
+				Data data = (Data) queue.remove();
+				context.write( new Text( data.getString() ), NullWritable.get() );
 			}
 		}
 	}
 
-	public static class IMDBReducer extends Reducer<Text,IntWritable,Text,IntWritable>
-	{
-		private IntWritable result = new IntWritable();
-
-		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException 
-		{
-			int sum = 0;
-			for (IntWritable val : values) 
-			{
-				sum += val.get();
+    public static class TopKReducer extends Reducer<Text,NullWritable,Text,NullWritable> {
+		private PriorityQueue<Data> queue ;
+		private Comparator<Data> comp = new DataComparator();
+		private int topK;
+		
+		public void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
+			StringTokenizer itr = new StringTokenizer(value.toString());
+			String title = itr.nextToken().trim();
+            double rate = Double.parseDouble(itr.nextToken().trim());
+            insertData(queue, title, rate, topK);
+		}
+		
+		protected void setup(Context context) throws IOException, InterruptedException {
+			Configuration conf = context.getConfiguration();
+			topK = conf.getInt("topK", -1);
+			queue = new PriorityQueue<Data>( topK , comp);
+		}
+		
+		protected void cleanup(Context context) throws IOException, InterruptedException {
+			while( queue.size() != 0 ) {
+				Data data = (Data) queue.remove();
+				context.write( new Text( data.getString() ), NullWritable.get() );
 			}
-			result.set(sum);
-			context.write(key, result);
 		}
 	}
 
 	public static void main(String[] args) throws Exception 
 	{
+        String first_phase_result = "/first_phase_result";
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        int topK;
+        int topK = new Path(otherArgs[2]);
 		if (otherArgs.length != 2) 
 		{
 			System.err.println("Usage: IMDB <in> <out>");
@@ -65,17 +195,28 @@ public class IMDBStudent20180950
 		}
         conf.setInt("topK", topK);
 
-		Job job = new Job(conf, "imdb");
-		job.setJarByClass(IMDBStudent20180950.class);
-		job.setMapperClass(IMDBMapper.class);
-		job.setNumReduceTasks(1);
-		job.setReducerClass(IMDBtReducer.class);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(NullWritable.class);
-		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
-		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
-        topK = new Path(otherArgs[2]);
-		FileSystem.get(job.getConfiguration()).delete( new Path(otherArgs[1]), true);
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		Job job1 = new Job(conf, "imdb1");
+		job1.setJarByClass(IMDBStudent20180950.class);
+		job1.setMapperClass(IMDBMapper.class);
+		job1.setReducerClass(IMDBtReducer.class);
+		job1.setOutputKeyClass(Text.class);
+		job1.setOutputValueClass(DoubleWritable.class);
+		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
+		FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
+		FileSystem.get(job1.getConfiguration()).delete( new Path(first_phase_result), true);
+		job1.waitForCompletion(true);
+
+        Job job2 = new Job(conf, "imdb2");
+        job2.setJarByClass(IMDBStudent20180950.class);
+        job2.setMapperClass(TopKMapper.class);
+        job2.setNumReduceTasks(1);
+        job2.setReducerClass(TopKReducer.class);
+        job2.setOutputKeyClass(Text.class);
+        job2.setOutputValueClass(NullWritable.class);
+
+        FileInputFormat.addInputPath(job2, new Path(first_phase_result));
+		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
+		FileSystem.get(job2.getConfiguration()).delete( new Path(otherArgs[1]), true);
+		System.exit(job2.waitForCompletion(true) ? 0 : 1);
 	}
 }
