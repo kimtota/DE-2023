@@ -94,6 +94,7 @@ public class TopK {
 			System.err.println("Usage: TopK <in> <out>"); System.exit(2);
 		}
 		conf.setInt("topK", topK);
+		
 		Job job = new Job(conf, "TopK");
 		job.setJarByClass(TopK.class);
 		job.setMapperClass(TopKMapper.class);
