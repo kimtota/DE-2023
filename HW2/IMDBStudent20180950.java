@@ -162,7 +162,7 @@ public class IMDBStudent20180950
 		}
 	}
 
-    public static class TopKReducer extends Reducer<Text,NullWritable,Text,NullWritable> {
+    public static class TopKReducer extends Reducer<Text,NullWritable,Text,Text> {
 		private PriorityQueue<Data> queue ;
 		private Comparator<Data> comp = new DataComparator();
 		private int topK;
@@ -186,7 +186,8 @@ public class IMDBStudent20180950
 			while( queue.size() != 0 ) {
 				Data data = (Data) queue.remove();
 				//buffer.add( data.getString2() );
-				context.write( new Text( data.getString2() ), NullWritable.get() );
+				//context.write( new Text( data.getString2() ), NullWritable.get() );
+				context.write(new Text( data.getTitle() ), new Text( data.getRate() ));
 			}
 			//Collections.sort(buffer, Collections.reverseOrder());
 			//for ( int i = 0 ; i < buffer.size(); i++ ) {
@@ -228,7 +229,7 @@ public class IMDBStudent20180950
 		job2.setNumReduceTasks(1);
 		job2.setReducerClass(TopKReducer.class);
 		job2.setOutputKeyClass(Text.class);
-		job2.setOutputValueClass(NullWritable.class);
+		job2.setOutputValueClass(Text.class);
 
 		FileInputFormat.addInputPath(job2, new Path(first_phase_result));
 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));

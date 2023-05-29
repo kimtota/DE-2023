@@ -27,4 +27,12 @@ public class Data {
 	public String getString2() {
 		return title + " " + rate;
 	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getRate() {
+		return rate;
+	}
  }
