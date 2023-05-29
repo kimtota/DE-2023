@@ -167,6 +167,8 @@ public class IMDBStudent20180950
 		private Comparator<Data> comp = new DataComparator();
 		private int topK;
 		
+		ArrayList<String> buffer = new ArrayList<String>();
+		
 		public void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(key.toString(),"|");
 			String title = itr.nextToken().trim();
@@ -183,7 +185,12 @@ public class IMDBStudent20180950
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			while( queue.size() != 0 ) {
 				Data data = (Data) queue.remove();
-				context.write( new Text( data.getString2() ), NullWritable.get() );
+				buffer.add( data.getString2() );
+				//context.write( new Text( data.getString2() ), NullWritable.get() );
+			}
+			Collections.sort(buffer, Collections.reverseOrder());
+			for ( int i = 0 ; i < buffer.size(); i++ ) {
+				context.write( new Text( buffer.get(i) ), NullWritable.get() );
 			}
 		}
 	}
