@@ -13,12 +13,12 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class YouTubeStudent20180950
 {
     public static class YouTubeMapper extends Mapper<Object, Text, Text, DoubleWritable>
-     {
+    {
         private Text _key = new Text();
         private DoubleWritable _value = new DoubleWritable();
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
-		{
+	{
             StringTokenizer itr = new StringTokenizer(value.toString(), "|");
             String serial_num = itr.nextToken().trim();
             String company = itr.nextToken().trim();
@@ -34,38 +34,28 @@ public class YouTubeStudent20180950
         }
      }
 
-	public static class YouTubeReducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable>
+	public static class YouTubeReducer extends Reducer<Text,DoubleWritable,Text,Text>
 	{
 		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
-			DoubleWritable reduce_result = new DoubleWritable();
+			Text _key = new Text();
+			Text reduce_result = new Text();
             		double sum = 0;
-            		int cnt = 0;
+            		double cnt = 0;
 			
 			for (DoubleWritable val : values) {
 				double num = val.get();
                 		sum += num;
-                		cnt++;
+                		cnt += 1;
             		}
-            		reduce_result.set(sum / cnt);
-            		context.write(key, reduce_result);
+            		sum = sum / cnt;
+            		String odf = String.format("%.4f", sum);
+            		_key.set(key + "|");
+            		reduce_result.set(odf);
+            		context.write(_key, reduce_result);
 		}
 	}
 
-    public static class Data {
-        public String title;
-        public double rate;
-
-        public Data(String _title, double _rate) {
-            this.title = _title;
-            this.rate = _rate;
-        }
-
-        public String getString() {
-            return title + " " + rate;
-        }
-    }
-
-    public static class DataComparator implements Comparator<Data> {
+    	public static class DataComparator implements Comparator<Data> {
 		public int compare(Data x, Data y) {
 			if ( x.rate > y.rate ) return 1;
 			if ( x.rate < y.rate ) return -1;
@@ -83,17 +73,17 @@ public class YouTubeStudent20180950
 		}
 	}
 
-    public static class TopKMapper extends Mapper<Text, DoubleWritable, Text, NullWritable> {
+    public static class TopKMapper extends Mapper<Object, Text, Text, NullWritable> {
 		private PriorityQueue<Data> queue ;
         private Comparator<Data> comp = new DataComparator();
 		private int topK;
 		
 		public void map(Object key, Text value, Context context) throws IOException,
 		InterruptedException {
-			StringTokenizer itr = new StringTokenizer(value.toString());
+			StringTokenizer itr = new StringTokenizer(value.toString(), "|");
 			String title = itr.nextToken().trim();
-            double rate = Double.parseDouble(itr.nextToken().trim());
-            insertData(queue, title, rate, topK);
+            		double rate = Double.parseDouble(itr.nextToken().trim());
+            		insertData(queue, title, rate, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException {
@@ -116,10 +106,10 @@ public class YouTubeStudent20180950
 		private int topK;
 		
 		public void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
-			StringTokenizer itr = new StringTokenizer(values.toString());
+			StringTokenizer itr = new StringTokenizer(key.toString(),"|");
 			String title = itr.nextToken().trim();
-            double rate = Double.parseDouble(itr.nextToken().trim());
-            insertData(queue, title, rate, topK);
+            		double rate = Double.parseDouble(itr.nextToken().trim());
+            		insertData(queue, title, rate, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException {
@@ -131,7 +121,7 @@ public class YouTubeStudent20180950
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			while( queue.size() != 0 ) {
 				Data data = (Data) queue.remove();
-				context.write( new Text( data.getString() ), NullWritable.get() );
+				context.write( new Text( data.getString2() ), NullWritable.get() );
 			}
 		}
 	}
@@ -142,10 +132,10 @@ public class YouTubeStudent20180950
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         	int topK = Integer.parseInt(otherArgs[2]);
-		if (otherArgs.length != 2) 
+		if (otherArgs.length != 3) 
 		{
 			System.err.println("Usage: Youtube <in> <out>");
-			System.exit(2);
+			System.exit(3);
 		}
         	conf.setInt("topK", topK);
 
