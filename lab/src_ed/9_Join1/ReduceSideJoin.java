@@ -34,9 +34,9 @@ public class ReduceSideJoin
 			else {
 				// join_key를 추출, 나머지 레코드와 문자B를 붙여서 emit
 				o_value = "B" + ",";
-				o_value += itr.nextToken().trim() + ",";
-				o_value += itr.nextToken().trim();
 				joinKey = itr.nextToken().trim();
+				o_value += itr.nextToken().trim();
+				
 			}
 			outputKey.set( joinKey );
 			outputValue.set( o_value );
@@ -81,9 +81,9 @@ public class ReduceSideJoin
 			}
 
 			for ( int i = 0 ; i < buffer.size(); i++ ) {
-				Text val = buffer.get(i);
+				String val = buffer.get(i);
 				
-				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
+				StringTokenizer itr = new StringTokenizer(val, ",");
 				String file_type = itr.nextToken().trim();
 				String id = itr.nextToken().trim();
 				String price = itr.nextToken().trim();

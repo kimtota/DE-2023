@@ -1,4 +1,4 @@
-import java.io.IOException;
+/*import java.io.IOException;
 import java.util.*;
 
 import org.apache.hadoop.conf.*;
@@ -17,7 +17,6 @@ public class MapSideJoin
 		
 		public void map(Object key, Text value, Context context) throws IOException,
 		InterruptedException{
-			…
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -46,6 +45,5 @@ public class MapSideJoin
 		
 		Job job = new Job(conf, "MapSideJoin");
 		DistributedCache.addCacheFile( new URI( "/join_data/relation_b" ), job.getConfiguration() ); //주소수정
-		…
 	}
-}
+}*/

@@ -1,4 +1,4 @@
-import java.io.IOException;
+/*import java.io.IOException;
 import java.util.*;
 
 import org.apache.hadoop.conf.*;
@@ -12,7 +12,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ReduceSideJoin2
 {
-	/*
+	
 	public static class ReduceSideJoinReducer extends Reducer<Text,Text,Text,Text> {
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException,InterruptedException {
 			Text reduce_key = new Text();
@@ -43,7 +43,7 @@ public class ReduceSideJoin2
 			}
 		}
 	}
-	*/
+	
 	public static class ReduceSideJoin2Mapper extends Mapper<Object, Text, DoubleString, Text> {
 		boolean fileA = true;
 		DoubleString double_key = new DoubleString();
@@ -157,7 +157,7 @@ public class ReduceSideJoin2
 		FileSystem.get(job.getConfiguration()).delete( new Path(otherArgs[1]), true);
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
-}
+} */
 
 
 

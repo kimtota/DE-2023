@@ -38,15 +38,16 @@ public class YouTubeStudent20180950
 	{
 		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
 			DoubleWritable reduce_result = new DoubleWritable();
-            double sum = 0;
-            int cnt = 0;
+            		double sum = 0;
+            		int cnt = 0;
 			
 			for (DoubleWritable val : values) {
-                sum += rating;
-                cnt++;
-            }
-            reduce_result.set(sum / cnt);
-            context.write(key, reduce_result);
+				double num = val.get();
+                		sum += num;
+                		cnt++;
+            		}
+            		reduce_result.set(sum / cnt);
+            		context.write(key, reduce_result);
 		}
 	}
 
@@ -115,7 +116,7 @@ public class YouTubeStudent20180950
 		private int topK;
 		
 		public void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
-			StringTokenizer itr = new StringTokenizer(value.toString());
+			StringTokenizer itr = new StringTokenizer(values.toString());
 			String title = itr.nextToken().trim();
             double rate = Double.parseDouble(itr.nextToken().trim());
             insertData(queue, title, rate, topK);
@@ -135,18 +136,18 @@ public class YouTubeStudent20180950
 		}
 	}
 
-    public static void main(String[] args) throws Exception 
+	public static void main(String[] args) throws Exception 
 	{
-        String first_phase_result = "/first_phase_result";
+        	String first_phase_result = "/first_phase_result";
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        int topK = new Path(otherArgs[2]);
+        	int topK = Integer.parseInt(otherArgs[2]);
 		if (otherArgs.length != 2) 
 		{
 			System.err.println("Usage: Youtube <in> <out>");
 			System.exit(2);
 		}
-        conf.setInt("topK", topK);
+        	conf.setInt("topK", topK);
 
 		Job job1 = new Job(conf, "youtube1");
 		job1.setJarByClass(YouTubeStudent20180950.class);
@@ -159,15 +160,15 @@ public class YouTubeStudent20180950
 		FileSystem.get(job1.getConfiguration()).delete( new Path(first_phase_result), true);
 		job1.waitForCompletion(true);
 
-        Job job2 = new Job(conf, "youtube2");
-        job2.setJarByClass(YouTubeStudent20180950.class);
-        job2.setMapperClass(TopKMapper.class);
-        job2.setNumReduceTasks(1);
-        job2.setReducerClass(TopKReducer.class);
-        job2.setOutputKeyClass(Text.class);
-        job2.setOutputValueClass(NullWritable.class);
+		Job job2 = new Job(conf, "youtube2");
+		job2.setJarByClass(YouTubeStudent20180950.class);
+		job2.setMapperClass(TopKMapper.class);
+		job2.setNumReduceTasks(1);
+		job2.setReducerClass(TopKReducer.class);
+		job2.setOutputKeyClass(Text.class);
+		job2.setOutputValueClass(NullWritable.class);
 
-        FileInputFormat.addInputPath(job2, new Path(first_phase_result));
+        	FileInputFormat.addInputPath(job2, new Path(first_phase_result));
 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
 		FileSystem.get(job2.getConfiguration()).delete( new Path(otherArgs[1]), true);
 		System.exit(job2.waitForCompletion(true) ? 0 : 1);
