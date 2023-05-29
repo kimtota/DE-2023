@@ -42,8 +42,8 @@ public class YouTubeStudent20180950
             		double sum = 0;
             		double cnt = 0;
 			
-			for (DoubleWritable val : values) {
-				double num = val.get();
+					for (DoubleWritable val : values) {
+						double num = val.get();
                 		sum += num;
                 		cnt += 1;
             		}
@@ -101,7 +101,7 @@ public class YouTubeStudent20180950
 		}
 	}
 
-    public static class TopKReducer extends Reducer<Text,NullWritable,Text,Text> {
+    public static class TopKReducer extends Reducer<Text,NullWritable,Text,NullWritable> {
 		private PriorityQueue<Data> queue ;
 		private Comparator<Data> comp = new DataComparator();
 		private int topK;
@@ -125,8 +125,8 @@ public class YouTubeStudent20180950
 			while( queue.size() != 0 ) {
 				Data data = (Data) queue.remove();
 				//buffer.add( data.getString2() );
-				//context.write( new Text( data.getString2() ), NullWritable.get() );
-				context.write(new Text( data.getTitle() ), new Text( data.getRate() ));
+				context.write( new Text( data.getString2() ), NullWritable.get() );
+				//context.write(new Text( data.getTitle() ), new Text( data.getRate() ));
 			}
 			//Collections.sort(buffer, Collections.reverseOrder());
 			//for ( int i = 0 ; i < buffer.size(); i++ ) {
@@ -165,9 +165,9 @@ public class YouTubeStudent20180950
 		job2.setNumReduceTasks(1);
 		job2.setReducerClass(TopKReducer.class);
 		job2.setOutputKeyClass(Text.class);
-		job2.setOutputValueClass(Text.class);
+		job2.setOutputValueClass(NullWritable.class);
 
-        	FileInputFormat.addInputPath(job2, new Path(first_phase_result));
+		FileInputFormat.addInputPath(job2, new Path(first_phase_result));
 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
 		FileSystem.get(job2.getConfiguration()).delete( new Path(otherArgs[1]), true);
 		System.exit(job2.waitForCompletion(true) ? 0 : 1);
