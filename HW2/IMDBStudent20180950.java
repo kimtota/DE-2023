@@ -194,15 +194,14 @@ public class IMDBStudent20180950
 		String first_phase_result = "/first_phase_result";
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        	int topK = 3;
         	
-		if (otherArgs.length != 2) 
+		if (otherArgs.length != 3) 
 		{
 			System.err.println("Usage: IMDB <in> <out> <topK>");
 			System.exit(3);
 		}
 		
-		//int topK = Integer.parseInt(otherArgs[2]);
+		int topK = Integer.parseInt(otherArgs[2]);
         	conf.setInt("topK", topK);
         	
         	Job job1 = new Job(conf, "imdb1");
