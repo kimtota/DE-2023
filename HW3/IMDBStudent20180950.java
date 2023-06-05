@@ -36,7 +36,7 @@ public class IMDBStudent20180950
 		
 		FlatMapFunction<String, String> fmf2 = new FlatMapFunction<String, String>() {
 			public Iterator<String> call(String s) {
-				return Arrays.asList(s.split("//|")).iterator();
+				return Arrays.asList(s.split("\\|")).iterator();
 			}
 		};
 		JavaRDD<String> words3 = words2.flatMap(fmf2);
