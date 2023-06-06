@@ -15,7 +15,7 @@ public class IMDBStudent20180950
 {
 	public static void main(String[] args) throws Exception
 	{
-		if (args.length < 2) {
+		if (args.length < 1) {
 			System.err.println("Usage: IMDB <in-file> <out-file>");
 			System.exit(1);
 		}
