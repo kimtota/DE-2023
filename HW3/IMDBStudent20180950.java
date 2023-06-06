@@ -32,7 +32,7 @@ public class IMDBStudent20180950
 			}
 		};
 		JavaRDD<String> words1 = lines.flatMap(fmf);
-		JavaRDD<String> words2 = words1.filter(new Function<String, Boolean>() { public Boolean call(String s) { return s.contains("|") == true; }});
+		JavaRDD<String> words2 = words1.filter(new Function<String, Boolean>() { public Boolean call(String s) { return s.contains("|") != true; }});
 		
 		FlatMapFunction<String, String> fmf2 = new FlatMapFunction<String, String>() {
 			public Iterator<String> call(String s) {
