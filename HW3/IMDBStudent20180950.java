@@ -54,8 +54,9 @@ public class IMDBStudent20180950
 			}
 		};
 		JavaPairRDD<String, Integer> counts = ones.reduceByKey(f2);
+		JavaRDD<String> result = counts.map(x -> x._1 + " " + x._2);
 		
-		counts.saveAsTextFile(args[1]);
+		result.saveAsTextFile(args[1]);
 		spark.stop();
 	}
 }
