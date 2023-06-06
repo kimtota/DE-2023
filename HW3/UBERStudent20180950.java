@@ -17,7 +17,7 @@ public class UBERStudent20180950
 {
 	public static void main(String[] args) throws Exception
 	{
-		if (args.length < 2) {
+		if (args.length < 1) {
 			System.err.println("Usage: UBER <in-file> <out-file>");
 			System.exit(1);	
 		}
@@ -29,7 +29,7 @@ public class UBERStudent20180950
 		JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
 		
 		PairFunction<String, String, String> pfA = new PairFunction<String, String, String>() {
-			public Tuple2<String, Line> call(String s) {
+			public Tuple2<String, String> call(String s) {
 				StringTokenizer itr = new StringTokenizer(s, ",");
 				String region = itr.nextToken().trim();
 				String date = itr.nextToken().trim();
@@ -71,7 +71,7 @@ public class UBERStudent20180950
 			}
 		};
 		JavaPairRDD<String, String> counts = kvpair.reduceByKey(f2);
-		JavaRDD<String> result = counts.map(x -> x._1 + " " + x._2);
+		//JavaRDD<String> result = counts.map(x -> x._1 + " " + x._2);
 		
 		counts.saveAsTextFile(args[1]);
 		spark.stop();
