@@ -26,17 +26,16 @@ public class ReduceSideJoin
 
 			if( fileA ) {
 				// join_key를 추출, 나머지 레코드와 문자A를 붙여서 emit
-				o_value = "A" + ",";
+				o_value = "A,";
 				o_value += itr.nextToken().trim() + ",";
 				o_value += itr.nextToken().trim();
 				joinKey = itr.nextToken().trim();
 			}
 			else {
 				// join_key를 추출, 나머지 레코드와 문자B를 붙여서 emit
-				o_value = "B" + ",";
+				o_value = "B,";
 				joinKey = itr.nextToken().trim();
 				o_value += itr.nextToken().trim();
-				
 			}
 			outputKey.set( joinKey );
 			outputValue.set( o_value );
@@ -46,8 +45,12 @@ public class ReduceSideJoin
 		protected void setup(Context context) throws IOException, InterruptedException
 		{
 			String filename = ((FileSplit) context.getInputSplit()).getPath().getName();
-			if ( filename.indexOf( "relation_a" ) != -1 ) fileA = true;
-			else fileA = false;
+			if ( filename.indexOf( "relation_a" ) != -1 ) {
+				fileA = true;
+			}
+			else {
+				fileA = false;
+			}
 		}
 	}
 	
@@ -55,7 +58,7 @@ public class ReduceSideJoin
 	{
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			Text reduce_key = new Text();
-			Text reduce_result = new Text();
+			Text reduce_value = new Text();
 			String description = ""; // table B's info
 			ArrayList<String> buffer = new ArrayList<String>(); // 초기화
 			
@@ -74,23 +77,21 @@ public class ReduceSideJoin
 						String id = itr.nextToken().trim();
 						String price = itr.nextToken().trim();
 						reduce_key.set(id);
-						reduce_result.set(price + " " + description);
-						context.write(reduce_key, reduce_result);
+						reduce_value.set(price + " " + description);
+						context.write(reduce_key, reduce_value);
 					}
 				}
 			}
 
 			for ( int i = 0 ; i < buffer.size(); i++ ) {
-				String val = buffer.get(i);
-				
-				StringTokenizer itr = new StringTokenizer(val, ",");
+				StringTokenizer itr = new StringTokenizer(buffer.get(i), ",");
 				String file_type = itr.nextToken().trim();
 				String id = itr.nextToken().trim();
 				String price = itr.nextToken().trim();
 
 				reduce_key.set(id);
-				reduce_result.set(price + " " + description);
-				context.write(reduce_key, reduce_result);
+				reduce_value.set(price + " " + description);
+				context.write(reduce_key, reduce_value);
 			}
 		}
 	}
@@ -99,22 +100,24 @@ public class ReduceSideJoin
 	{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		int topK = 3;
+
 		if (otherArgs.length != 2) {
 			System.err.println("Usage: ReduceSideJoin <in> <out>");
 			System.exit(2);
 		}
-		conf.setInt("topK", topK);
 
 		Job job = new Job(conf, "ReduceSideJoin");
 		job.setJarByClass(ReduceSideJoin.class);
 		job.setMapperClass(ReduceSideJoinMapper.class);
 		job.setReducerClass(ReduceSideJoinReducer.class);
+
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
+
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 		FileSystem.get(job.getConfiguration()).delete( new Path(otherArgs[1]), true);
+
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

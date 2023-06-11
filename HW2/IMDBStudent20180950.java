@@ -13,6 +13,34 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class IMDBStudent20180950
 {
+	public static class Data {
+		public String title;
+		public double rate;
+
+		public Data(String _title, double _rate) {
+			this.title = _title;
+			this.rate = _rate;
+		}
+
+		public String getString() {
+			return title + "|" + rate;
+		}
+
+		public String getString2() {
+			return title + " " + rate;
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public String getRate() {
+			return rate;
+		}
+	}
+
+
+
 	public static class IMDBMapper extends Mapper<Object, Text, Text, Text> 
 	{
 		boolean fileR = true;
@@ -185,55 +213,42 @@ public class IMDBStudent20180950
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			while( queue.size() != 0 ) {
 				Data data = (Data) queue.remove();
-				//buffer.add( data.getString2() );
-				context.write( new Text( data.getString2() ), NullWritable.get() );
-				//context.write(new Text( data.getTitle() ), new Text( data.getRate() ));
+				context.write(new Text( data.getTitle() ), new DoubleWritables( data.getRate() ));
 			}
-			//Collections.sort(buffer, Collections.reverseOrder());
-			//for ( int i = 0 ; i < buffer.size(); i++ ) {
-			//	context.write( new Text( buffer.get(i) ), NullWritable.get() );
-			//}
 		}
 	}
 
 
-	public static void main(String[] args) throws Exception 
-	{
-		String first_phase_result = "/first_phase_result";
+	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         	
-		if (otherArgs.length != 3) 
-		{
+		if (otherArgs.length != 3) {
 			System.err.println("Usage: IMDB <in> <out> <topK>");
 			System.exit(3);
 		}
-		
-		int topK = Integer.parseInt(otherArgs[2]);
-        	conf.setInt("topK", topK);
-        	
-        	Job job1 = new Job(conf, "imdb1");
-		job1.setJarByClass(IMDBStudent20180950.class);
-		job1.setMapperClass(IMDBMapper.class);
-		job1.setReducerClass(IMDBReducer.class);
-		job1.setOutputKeyClass(Text.class);
-		job1.setOutputValueClass(Text.class);
+
+		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
+
+		Job job = new Job(conf, "imdb");
+		job.setJarByClass(IMDBStudent20180950.class);
+		job.setMapperClass(IMDBMapper.class);
+		job.setReducerClass(IMDBReducer.class);
+
+		job.setPartitionerClass(FirstPartitioner.class);
+		job.setGroupingComparatorClass(FirstGroupingComparator.class);
+		job.setSortComparatorClass(CompositeKeyComparator.class);
+
+		job.setMapOutputKeyClass(DoubleString.class);
+		job.setMapOutputValueClass(Text.class);
+
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(DoubleWritable.class);
+
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
-		FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
-		FileSystem.get(job1.getConfiguration()).delete( new Path(first_phase_result), true);
-		job1.waitForCompletion(true);
+		FileOutputFormat.setOutputPath(job1, new Path(otherArgs[1]));
+		FileSystem.get(job1.getConfiguration()).delete( new Path(otherArgs[1]), true);
 
-		Job job2 = new Job(conf, "imdb2");
-		job2.setJarByClass(IMDBStudent20180950.class);
-		job2.setMapperClass(TopKMapper.class);
-		job2.setNumReduceTasks(1);
-		job2.setReducerClass(TopKReducer.class);
-		job2.setOutputKeyClass(Text.class);
-		job2.setOutputValueClass(NullWritable.class);
-
-		FileInputFormat.addInputPath(job2, new Path(first_phase_result));
-		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
-		FileSystem.get(job2.getConfiguration()).delete( new Path(otherArgs[1]), true);
-		System.exit(job2.waitForCompletion(true) ? 0 : 1);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

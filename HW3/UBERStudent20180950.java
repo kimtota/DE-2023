@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import java.time.*;
 import java.time.format.TextStyle;
 
-
 public class UBERStudent20180950
 {
 	public static void main(String[] args) throws Exception
@@ -71,7 +70,6 @@ public class UBERStudent20180950
 			}
 		};
 		JavaPairRDD<String, String> counts = kvpair.reduceByKey(f2);
-		//JavaRDD<String> result = counts.map(x -> x._1 + " " + x._2);
 		
 		counts.saveAsTextFile(args[1]);
 		spark.stop();
