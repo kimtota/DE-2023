@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+
 public class IMDBStudent20180950
 {
 	public static void main(String[] args) throws Exception
@@ -27,25 +28,25 @@ public class IMDBStudent20180950
 		
 		FlatMapFunction<String, String> fmf = new FlatMapFunction<String, String>() {
 			public Iterator<String> call(String s) {
-				ArrayList<String> arr = new ArrayList<String>();
-				String [] splitter = s.split("::");
-				StringTokenizer itr = new StringTokenizer(splitter[2], "|");
-
-				while(itr.hasMoreTokens()) {
-					String str = itr.nextToken();
-					arr.add(str);
-				}
-				return arr.iterator();
+				return Arrays.asList(s.split("::")).iterator();
 			}
 		};
 		JavaRDD<String> words1 = lines.flatMap(fmf);
+		JavaRDD<String> words2 = words1.filter(new Function<String, Boolean>() { public Boolean call(String s) { return s.contains("|") == true; }});
+		
+		FlatMapFunction<String, String> fmf2 = new FlatMapFunction<String, String>() {
+			public Iterator<String> call(String s) {
+				return Arrays.asList(s.split("\\|")).iterator();
+			}
+		};
+		JavaRDD<String> words3 = words2.flatMap(fmf2);
 		
 		PairFunction<String, String, Integer> pf = new PairFunction<String, String, Integer>() {
 			public Tuple2<String, Integer> call(String s) {
 				return new Tuple2(s, 1);
 			}
 		};
-		JavaPairRDD<String, Integer> ones = words1.mapToPair(pf);
+		JavaPairRDD<String, Integer> ones = words3.mapToPair(pf);
 		
 		Function2<Integer, Integer, Integer> f2 = new Function2<Integer, Integer, Integer>() {
 			public Integer call(Integer x, Integer y) {

@@ -62,16 +62,13 @@ public class UBERStudent20180950
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		if (otherArgs.length != 2) 
-		{
+		if (otherArgs.length != 2) {
 			System.err.println("Usage: uber <in> <out>");
 			System.exit(2);
 		}
 		
 		Job job = new Job(conf, "uber");
-		
 		job.setJarByClass(UBERStudent20180950.class);
 		job.setMapperClass(UBERMapper.class);
 		job.setCombinerClass(UBERReducer.class);
